@@ -14,7 +14,7 @@ export const site = {
   baseline: 'Du pain, des gâteaux, et de quoi déjeuner.',
   shortDescription:
     'Boulangerie-pâtisserie et sandwicherie avenue de Rantigny (60290) : pains, viennoiseries, pâtisseries, tartes, gâteaux sur commande et snacking. Ouvert de 6h30 à 20h, fermé le jeudi.',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.aux-merveilles-rantigny.fr',
+  url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://www.aux-merveilles-rantigny.fr',
 
   phone: { display: '09 80 67 05 88', href: 'tel:+33980670588', international: '+33 9 80 67 05 88' },
 
