@@ -1,12 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import type { ZodSchema } from 'zod';
+import { site } from '@/data/site';
 
 export type Status = 'idle' | 'loading' | 'success' | 'error';
 
-/** Petite fabrique commune aux deux formulaires : validation Zod + états d'envoi. */
-export function useFormState<T>(schema: ZodSchema<T>, endpoint: string) {
+type ApiReply = { ok: boolean; error?: string; fields?: Record<string, string> };
+
+/**
+ * Envoi progressif : le <form> poste nativement vers /api/contact sans JavaScript.
+ * Avec JavaScript, l'envoi passe par fetch et les erreurs (validées par le serveur)
+ * s'affichent sous chaque champ, sans recharger la page.
+ */
+export function useFormState() {
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -14,38 +20,41 @@ export function useFormState<T>(schema: ZodSchema<T>, endpoint: string) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const values = Object.fromEntries(new FormData(form).entries());
+    if (status === 'loading') return;
 
-    const parsed = schema.safeParse(values);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const issue of parsed.error.issues) {
-        const key = String(issue.path[0]);
-        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
-      }
-      setErrors(fieldErrors);
-      setStatus('error');
-      setMessage('Quelques champs sont à compléter avant l’envoi.');
-      return;
-    }
-
-    setErrors({});
     setStatus('loading');
     setMessage('Envoi en cours…');
+    setErrors({});
+
+    const body = new URLSearchParams();
+    new FormData(form).forEach((value, key) => {
+      if (typeof value === 'string') body.append(key, value);
+    });
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(form.action, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
+        headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
       });
-      if (!response.ok) throw new Error(await response.text());
-      setStatus('success');
-      setMessage('Demande envoyée. La boutique vous recontacte pour confirmer.');
-      form.reset();
+      const data = (await response.json().catch(() => ({ ok: false }))) as ApiReply;
+
+      if (response.ok && data.ok) {
+        setStatus('success');
+        setMessage('Demande bien reçue. La boutique vous rappelle pour en parler.');
+        form.reset();
+        return;
+      }
+
+      setErrors(data.fields ?? {});
+      setStatus('error');
+      setMessage(data.error ?? `L’envoi n’a pas abouti. Appelez la boutique au ${site.phone.display}.`);
+
+      const firstInvalid = data.fields ? Object.keys(data.fields)[0] : undefined;
+      if (firstInvalid) form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus();
     } catch {
       setStatus('error');
-      setMessage('L’envoi n’a pas abouti. Appelez directement la boutique au 09 80 67 05 88.');
+      setMessage(`Connexion impossible. Vérifiez votre réseau ou appelez la boutique au ${site.phone.display}.`);
     }
   }
 

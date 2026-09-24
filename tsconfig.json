@@ -18,5 +18,13 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "tailwind.config.ts",
+    "components/sections/HoursStrip.tsx",
+    "components/sections/MatinIntro.tsx",
+    "components/sections/QuickFacts.tsx",
+    "components/sections/ReviewsBlock.tsx",
+    "components/ui/Eyebrow.tsx"
+  ]
 }

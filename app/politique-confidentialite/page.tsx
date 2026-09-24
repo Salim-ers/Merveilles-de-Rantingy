@@ -8,32 +8,48 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-const blocks = [
-  { id: undefined, t: 'Données collectées', p: 'Les formulaires de contact et de commande collectent uniquement ce qui permet de traiter la demande : nom, prénom, téléphone, e-mail, date souhaitée et contenu du message.' },
-  { id: undefined, t: 'Finalité et conservation', p: 'Ces informations servent exclusivement à répondre à la demande. Elles ne sont ni revendues ni transmises à des tiers à des fins commerciales, et sont conservées le temps du traitement.' },
-  { id: undefined, t: 'Vos droits', p: 'Conformément au RGPD, vous pouvez demander l’accès, la rectification ou la suppression de vos données en appelant la boutique.' },
-  { id: 'cookies', t: 'Cookies', p: 'Ce site ne dépose aucun cookie de mesure d’audience ni de publicité : aucune bannière de consentement n’est donc affichée. Si un outil de statistiques était ajouté, un bandeau conforme serait mis en place au préalable.' },
-  { id: undefined, t: 'Services tiers', p: 'La carte d’accès est fournie par Google Maps et n’est chargée qu’au moment où la section s’affiche. Son affichage peut entraîner un dépôt de cookies par Google.' },
-];
+const turnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export default function PrivacyPage() {
   return (
-    <section className="sec ivory" style={{ paddingTop: 'calc(var(--bar) + var(--pad))' }}>
-      <div className="shell" style={{ maxWidth: 860 }}>
-        <h1 className="ti s2">Confidentialité</h1>
-        <p className="lead" style={{ marginTop: 18 }}>
-          Le site de {site.name} collecte le strict nécessaire, et rien d’autre.
-        </p>
+    <article className="mentions cadre">
+      <h1 className="d d-l">Confidentialité</h1>
+      <p className="mentions-lead">Le site de {site.name} collecte le strict nécessaire pour répondre à vos demandes, et rien d’autre.</p>
 
-        <div className="steps" style={{ marginTop: 34 }}>
-          {blocks.map((block, i) => (
-            <div className="step" id={block.id} key={block.t}>
-              <span className="n">{i + 1}</span>
-              <div><h3>{block.t}</h3><p>{block.p}</p></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+      <h2 className="d d-m">Données collectées</h2>
+      <p>
+        La fiche de demande de gâteau recueille vos prénom, nom, téléphone, e-mail (facultatif), la date souhaitée,
+        le nombre de personnes, l’occasion et votre message. Le formulaire de contact recueille vos prénom, nom,
+        e-mail, téléphone (facultatif) et votre message.
+      </p>
+
+      <h2 className="d d-m">Utilisation</h2>
+      <p>
+        Ces informations sont transmises par e-mail à la boutique, uniquement pour vous rappeler ou vous répondre au
+        sujet de votre demande. Elles ne sont ni revendues, ni cédées, ni utilisées à des fins publicitaires. Le site
+        ne les enregistre pas dans une base de données ; elles sont conservées par la boutique le temps nécessaire au
+        traitement de votre demande.
+      </p>
+
+      <h2 className="d d-m">Prestataires</h2>
+      <p>
+        Le site est hébergé par {site.legal.host.name}. Les e-mails sont acheminés par un service d’envoi
+        transactionnel.{turnstile ? ' Une vérification anti-spam Cloudflare Turnstile est utilisée sur les formulaires.' : ''}
+      </p>
+
+      <h2 className="d d-m" id="cookies">Cookies</h2>
+      <p>
+        Ce site ne dépose aucun cookie de mesure d’audience, de publicité ou de réseau social. Aucune carte ni vidéo
+        tierce n’est chargée. C’est pourquoi aucun bandeau de consentement n’est affiché. Si un tel outil était ajouté,
+        votre consentement serait demandé avant tout dépôt.
+      </p>
+
+      <h2 className="d d-m">Vos droits</h2>
+      <p>
+        Conformément au RGPD, vous pouvez demander l’accès, la rectification ou la suppression de vos données en
+        contactant la boutique au <a href={site.phone.href}>{site.phone.display}</a>. Vous pouvez aussi adresser une
+        réclamation à la CNIL (cnil.fr).
+      </p>
+    </article>
   );
 }

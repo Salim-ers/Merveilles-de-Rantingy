@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react';
 import { getBusinessStatus, type BusinessStatus } from '@/lib/business-status';
 
 /**
- * Pastille d'ouverture, calculée sur le fuseau Europe/Paris (jeudi compris).
- * Le tableau des horaires reste en HTML : rien d'essentiel ne dépend de JS.
+ * Statut d'ouverture calculé sur le fuseau Europe/Paris, à partir de data/opening-hours.ts.
+ * Le serveur (et un navigateur sans JavaScript) affiche le résumé fixe des horaires :
+ * jamais d'« ouvert » figé au moment du build.
+ *
+ * - variant "today" : « Ouvert aujourd’hui · 6h30–20h »
+ * - variant "live"  : « Ouvert maintenant · jusqu’à 20h »
  */
-export function OpenState() {
+export function OpenState({ variant = 'live', fallback }: { variant?: 'today' | 'live'; fallback: string }) {
   const [state, setState] = useState<BusinessStatus | null>(null);
 
   useEffect(() => {
@@ -17,10 +21,12 @@ export function OpenState() {
     return () => window.clearInterval(id);
   }, []);
 
+  const label = !state ? fallback : variant === 'today' ? state.today : `${state.headline} · ${state.detail}`;
+
   return (
-    <span className="chip" data-state={state?.status ?? 'closed'} suppressHydrationWarning>
+    <span className="state" data-state={state ? (state.open ? 'open' : 'closed') : 'unknown'}>
       <i aria-hidden="true" />
-      <span className="chip-label">{state ? state.label : '6h30 – 20h'}</span>
+      <span>{label}</span>
     </span>
   );
 }

@@ -1,54 +1,54 @@
 import Link from 'next/link';
 import { site, fullAddress } from '@/data/site';
+import { nav } from '@/data/navigation';
+import { hoursSummary } from '@/lib/business-status';
 
-const cols = [
-  { title: 'La boutique', links: [
-    { label: 'La boutique', href: '/la-boutique' },
-    { label: 'Nos produits', href: '/nos-produits' },
-    { label: 'Galerie', href: '/nos-produits#galerie' },
-  ]},
-  { title: 'Infos', links: [
-    { label: 'Horaires', href: '/contact#horaires' },
-    { label: 'Adresse', href: '/contact' },
-    { label: 'Commandes', href: '/commandes' },
-    { label: 'Actualités', href: '/actualites' },
-  ]},
-  { title: 'Légal', links: [
-    { label: 'Mentions légales', href: '/mentions-legales' },
-    { label: 'Confidentialité', href: '/politique-confidentialite' },
-    { label: 'Cookies', href: '/politique-confidentialite#cookies' },
-  ]},
-];
-
+/**
+ * Pied de page « devanture » : le store orange (avec sa bordure festonnée)
+ * porte le numéro de la boutique ; le bandeau noir dessous, l'adresse et les horaires.
+ */
 export function Foot() {
   return (
     <footer className="foot">
-      <div className="shell">
-        <div className="foot-grid">
-          <div>
-            <p className="fmark">Aux Merveilles <em>de Rantigny</em></p>
-            <p className="fsay">
-              Boulangerie, pâtisserie et sandwicherie, {site.address.street.toLowerCase()}.
-              Ouvert de 6h30 à 20h, fermé le jeudi.
-            </p>
-          </div>
-          {cols.map((col) => (
-            <div key={col.title}>
-              <h4>{col.title}</h4>
-              <ul>{col.links.map((l) => <li key={l.label}><Link href={l.href}>{l.label}</Link></li>)}</ul>
-            </div>
-          ))}
-        </div>
-        <div className="foot-end">
-          <p>
-            {site.legal.name} — {site.legal.form} au capital de {site.legal.capital}
-            <br />SIREN {site.legal.siren} · {site.legal.rcs} · {fullAddress}
+      <div className="store">
+        <div className="cadre store-in">
+          <p className="store-say">
+            Une commande, une question&nbsp;?<span className="it"> Appelez la boutique.</span>
           </p>
-          <p>
-            Logo officiel à intégrer — composition typographique provisoire.
-            <br />Numéro de voirie à confirmer auprès de la boutique.
-          </p>
+          <a className="store-tel" href={site.phone.href}>{site.phone.display}</a>
         </div>
+      </div>
+
+      <div className="cadre foot-body">
+        <Link className="mark mark--foot" href="/" aria-label={`${site.name} — accueil`}>
+          <span className="mark-a">Aux Merveilles</span>
+          <span className="mark-b">de Rantigny</span>
+        </Link>
+
+        <div className="foot-col">
+          <h2 className="foot-h">Venir</h2>
+          <p>{site.address.street}<br />{site.address.postalCode} {site.address.city}, {site.address.department}</p>
+          <a className="foot-link" href={site.maps.directions} target="_blank" rel="noopener noreferrer">Itinéraire →</a>
+        </div>
+
+        <div className="foot-col">
+          <h2 className="foot-h">Ouvert</h2>
+          <p>{hoursSummary()}</p>
+          <Link className="foot-link" href="/contact#horaires">Tous les horaires →</Link>
+        </div>
+
+        <nav className="foot-nav" aria-label="Plan du site">
+          <Link href="/">Accueil</Link>
+          {nav.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
+        </nav>
+      </div>
+
+      <div className="cadre foot-end">
+        <p>{site.legal.name} · {site.legal.form} · SIREN {site.legal.siren} · {fullAddress}</p>
+        <p>
+          <Link href="/mentions-legales">Mentions légales</Link>
+          <Link href="/politique-confidentialite">Confidentialité</Link>
+        </p>
       </div>
     </footer>
   );

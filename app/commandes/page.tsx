@@ -1,58 +1,59 @@
 import type { Metadata } from 'next';
-import { PageHead } from '@/components/sections/PageHead';
 import { OrderForm } from '@/components/forms/OrderForm';
-import { FinaleCTA } from '@/components/sections/FinaleCTA';
-import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Steps } from '@/components/sections/Steps';
+import { Photo } from '@/components/ui/Photo';
 import { media } from '@/data/media';
 import { site } from '@/data/site';
+import { breadcrumbSchema, jsonLd } from '@/lib/schema';
 
 export const metadata: Metadata = {
-  title: 'Commandes & événements',
-  description: 'Gâteaux d’anniversaire, pièces de fête, demandes particulières : envoyez votre demande à Aux Merveilles de Rantigny, la boutique confirme par téléphone.',
+  title: 'Gâteau d’anniversaire et d’occasion à Rantigny',
+  description:
+    'Anniversaire, fête de famille, gâteau personnalisé : décrivez votre demande à Aux Merveilles de Rantigny. La boutique vous rappelle pour confirmer disponibilité, format et tarif.',
   alternates: { canonical: '/commandes' },
+  openGraph: {
+    title: 'Votre occasion commence ici · Aux Merveilles de Rantigny',
+    description: 'Demande de gâteau d’occasion : la boutique vous rappelle pour en parler.',
+    url: '/commandes',
+    images: [{ url: media.coeurs.src, width: 1254, height: 1254, alt: media.coeurs.alt }],
+  },
 };
-
-const steps = [
-  { t: 'Vous décrivez', p: 'Occasion, nombre de personnes, date souhaitée.' },
-  { t: 'On vous rappelle', p: 'Faisabilité, format et tarif, de vive voix.' },
-  { t: 'Vous passez le chercher', p: 'À la boutique, le jour convenu.' },
-];
 
 export default function CommandesPage() {
   return (
     <>
-      <PageHead
-        crumb="Commandes"
-        title={<>Un gâteau<br /><em>à préparer ?</em></>}
-        lead="Dites-nous ce que vous voulez et pour quand. La boutique vous rappelle pour confirmer le format, le délai et le prix."
-        image={media.coeurs}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: 'Accueil', path: '/' }, { name: 'Gâteaux d’occasion', path: '/commandes' }])),
+        }}
       />
 
-      <section className="sec cocoa on-cocoa">
-        <div className="shell split">
-          <div>
-            <Eyebrow>Comment ça se passe</Eyebrow>
-            <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '14ch' }}>
-              Trois étapes,<br /><em>pas une de plus.</em>
-            </h2>
-            <div className="steps rise" data-d=".1s">
-              {steps.map((step, i) => (
-                <div className="step" key={step.t}>
-                  <span className="n">{i + 1}</span>
-                  <div><h3>{step.t}</h3><p>{step.p}</p></div>
-                </div>
-              ))}
-            </div>
-            <p className="rise" data-d=".15s" style={{ marginTop: 26 }}>
-              <a className="p p--cream" href={site.phone.href}>Ou appelez : {site.phone.display}</a>
-            </p>
-          </div>
+      <section className="occasion" aria-labelledby="order-title">
+        <div className="occasion-media">
+          <Photo k="coeurs" sizes="(max-width: 1023px) 100vw, 46vw" priority quality={80} pos="42% 60%" />
+          <h1 id="order-title" className="occasion-title">
+            <span className="rb rb-dark">Votre occasion</span>
+            <span className="rb rb-orange">commence ici.</span>
+          </h1>
+        </div>
 
+        <div className="occasion-body">
+          <p className="occasion-lead">
+            Anniversaire, fête de famille, gâteau personnalisé : remplissez la fiche, la boutique vous rappelle
+            pour voir ensemble ce qui est réalisable. Vous préférez parler tout de suite ?{' '}
+            <a href={site.phone.href}>{site.phone.display}</a>.
+          </p>
           <OrderForm />
         </div>
       </section>
 
-      <FinaleCTA />
+      <section className="occasion-how" aria-labelledby="how-title">
+        <div className="cadre">
+          <h2 id="how-title" className="d d-l">Comment <span className="it">ça se passe</span></h2>
+          <Steps tone="light" />
+        </div>
+      </section>
     </>
   );
 }

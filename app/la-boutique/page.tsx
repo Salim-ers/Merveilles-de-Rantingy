@@ -1,84 +1,57 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import { PageHead } from '@/components/sections/PageHead';
 import { ShopBand } from '@/components/sections/ShopBand';
-import { FinaleCTA } from '@/components/sections/FinaleCTA';
-import { Eyebrow } from '@/components/ui/Eyebrow';
+import { HoursCard } from '@/components/sections/HoursCard';
 import { media } from '@/data/media';
 import { site } from '@/data/site';
+import { hoursSummary } from '@/lib/business-status';
+import { breadcrumbSchema, jsonLd } from '@/lib/schema';
 
 export const metadata: Metadata = {
-  title: 'La boutique',
-  description: 'Aux Merveilles de Rantigny : boulangerie, pâtisserie et sandwicherie avenue de Rantigny (60290). Ouvert de 6h30 à 20h, fermé le jeudi.',
+  title: 'La boutique, avenue de Rantigny',
+  description: `Boulangerie, pâtisserie et sandwicherie avenue de Rantigny (60290), depuis ${site.legal.since}. ${hoursSummary()}.`,
   alternates: { canonical: '/la-boutique' },
+  openGraph: {
+    title: 'La boutique · Aux Merveilles de Rantigny',
+    description: 'Devanture noire, stores orange et comptoirs vitrés, avenue de Rantigny.',
+    url: '/la-boutique',
+    images: [{ url: media.interieur.src, width: 1254, height: 1254, alt: media.interieur.alt }],
+  },
 };
-
-const facts = [
-  { t: 'Une adresse de passage', p: 'La boutique est installée avenue de Rantigny, derrière une devanture sombre et ses stores orange. On la repère de loin.' },
-  { t: 'Ouvert tôt, fermé tard', p: 'De 6h30 à 20h : le pain du matin et celui du soir sont au même endroit, six jours sur sept.' },
-  { t: 'Sucré, salé, et le reste', p: 'Pain et viennoiserie, pâtisserie et tartes, sandwichs et boissons fraîches, glaces et confiserie selon la saison.' },
-];
 
 export default function BoutiquePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: 'Accueil', path: '/' }, { name: 'La boutique', path: '/la-boutique' }])),
+        }}
+      />
       <PageHead
-        crumb="La boutique"
-        title={<>Avenue de Rantigny,<br /><em>depuis {site.legal.since}.</em></>}
+        kicker={`${site.address.street} · depuis ${site.legal.since}`}
+        title={<>La <span className="it">boutique</span></>}
         lead="Une boulangerie-pâtisserie de quartier, ouverte six jours sur sept, du petit matin jusqu’au soir."
-        image={media.facade}
+        image="interieur"
+        pos="40% 60%"
       />
 
-      <section className="sec ivory">
-        <div className="shell duo">
-          <div className="duo-media curtain">
-            <figure className="arch" style={{ margin: 0 }}>
-              <Image src={media.interieur.src} alt={media.interieur.alt} fill sizes="(max-width:1080px) 100vw, 44vw" style={{ objectFit: 'cover' }} />
-            </figure>
-            <figure className="round" style={{ margin: 0 }}>
-              <Image src={media.painCampagne.src} alt={media.painCampagne.alt} fill sizes="220px" style={{ objectFit: 'cover' }} />
-            </figure>
-          </div>
+      <ShopBand withLink={false} />
 
-          <div className="duo-body">
-            <Eyebrow>La maison</Eyebrow>
-            <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '16ch' }}>
-              Ce qu’il y a derrière<br /><em>la vitrine.</em>
-            </h2>
-            <div className="steps rise" data-d=".1s">
-              {facts.map((fact, i) => (
-                <div className="step" key={fact.t}>
-                  <span className="n">{i + 1}</span>
-                  <div><h3>{fact.t}</h3><p>{fact.p}</p></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="sec cream">
-        <div className="shell">
-          <div className="head" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <Eyebrow>Activités déclarées</Eyebrow>
-            <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '17ch' }}>Tout ce qui se vend<br /><em>au comptoir.</em></h2>
-          </div>
-          <ul className="rayons" style={{ gap: '12px' }}>
-            {site.activities.map((activity, i) => (
-              <li className="rise" data-d={`${i * 0.03}s`} key={activity}>
-                <span className="badge" style={{ fontSize: '.95rem', padding: '10px 20px' }}>{activity}</span>
-              </li>
-            ))}
+      <section className="comptoir" aria-labelledby="trades-title">
+        <div className="cadre">
+          <h2 id="trades-title" className="d d-l">Au <span className="it">comptoir</span></h2>
+          <ul className="comptoir-list">
+            {site.activities.map((a) => <li key={a}>{a}</li>)}
           </ul>
-          <p className="lead rise" style={{ textAlign: 'center', margin: '28px auto 0' }}>
-            Liste issue de l’objet social déclaré au registre du commerce. Les disponibilités réelles
-            varient selon les jours et la saison.
+          <p className="comptoir-note">
+            Activités déclarées par l’entreprise. Ce qui est proposé varie selon les jours et les saisons :
+            la boutique vous renseigne au {site.phone.display}.
           </p>
         </div>
       </section>
 
-      <ShopBand />
-      <FinaleCTA />
+      <HoursCard />
     </>
   );
 }

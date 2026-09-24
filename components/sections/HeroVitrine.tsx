@@ -1,62 +1,52 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { media, type MediaKey } from '@/data/media';
+import { site } from '@/data/site';
+import { hoursSummary } from '@/lib/business-status';
+import { Photo } from '@/components/ui/Photo';
 import { OpenState } from '@/components/ui/OpenState';
 import { Arrow } from '@/components/ui/Arrow';
 
 /**
- * Hero : trois arches alignées comme une devanture, posées sur un appui de vitrine.
- * Le nom reste en typographie, au-dessus : les photos ne servent pas de fond.
+ * HERO COLLAGE — la vitrine vue du trottoir.
+ * Une grande pièce (l'entremets miroir), deux photos verticales en complément,
+ * et le nom posé sur des bandeaux pleins qui chevauchent les images :
+ * il reste lisible quelle que soit la photo dessous.
+ * Les métiers courent à la verticale le long de la grande photo, comme sur un montant de vitrine.
  */
-const panes: { key: MediaKey; label: string; side?: boolean; d?: string; priority?: boolean }[] = [
-  { key: 'painCampagne', label: 'Le pain', side: true, d: '.1s' },
-  { key: 'eclairsVitrine', label: 'La vitrine', priority: true },
-  { key: 'tartePommes', label: 'Les tartes', side: true, d: '.2s' },
-];
-
 export function HeroVitrine() {
   return (
-    <section className="hero2">
-      <div className="shell">
-        <div className="hero2-top"><OpenState /></div>
-
-        <h1 className="ti s1">
-          <span>Aux Merveilles</span>
-          <em>de Rantigny</em>
+    <section className="collage" aria-labelledby="hero-title">
+      <div className="collage-grid">
+        <h1 className="collage-title" id="hero-title">
+          <span className="rb rb-aux">Aux</span>
+          <span className="rb rb-mer">Merveilles</span>
+          <span className="rb rb-de">de Rantigny</span>
         </h1>
-        <p className="hero2-say rise" data-d=".08s">
-          Boulangerie, pâtisserie et sandwicherie, avenue de Rantigny.
-        </p>
 
-        <div className="vitrine">
-          {panes.map((pane) => {
-            const img = media[pane.key];
-            return (
-              <figure
-                className={`arch curtain ${pane.side ? 'side' : 'mid'}`}
-                data-d={pane.d}
-                key={pane.key}
-                style={{ margin: 0 }}
-              >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  priority={pane.priority}
-                  sizes="(max-width:760px) 100vw, 33vw"
-                  quality={86}
-                  style={{ objectFit: 'cover' }}
-                />
-                <figcaption>{pane.label}</figcaption>
-              </figure>
-            );
-          })}
-        </div>
-        <div className="sill" aria-hidden="true" />
+        <Photo
+          k="entremetsFruits"
+          className="collage-big"
+          sizes="(max-width: 1023px) 100vw, 64vw"
+          priority
+          quality={80}
+          pos="50% 42%"
+        >
+          <figcaption className="collage-strip">
+            {site.trades.map((t) => <span key={t}>{t}</span>)}
+          </figcaption>
+        </Photo>
 
-        <div className="hero2-cta rise" data-d=".12s">
-          <Link className="p p--main" href="/nos-produits">Voir ce qu’il y a en vitrine<Arrow /></Link>
-          <Link className="p p--line" href="/contact">Venir à la boutique</Link>
+        <Photo k="eclairs" className="collage-s1" sizes="(max-width: 1023px) 50vw, 24vw" pos="60% 50%" />
+        <Photo k="painCampagne" className="collage-s2" sizes="(max-width: 1023px) 46vw, 17vw" pos="52% 50%" />
+
+        <div className="collage-foot">
+          <p className="collage-where">
+            <OpenState variant="today" fallback={hoursSummary()} />
+            <span>{site.address.street}, {site.address.city}</span>
+          </p>
+          <div className="collage-cta">
+            <Link className="cta cta--orange" href="/nos-produits">Voir la vitrine<Arrow /></Link>
+            <Link className="cta cta--line" href="/commandes">Commander un gâteau</Link>
+          </div>
         </div>
       </div>
     </section>

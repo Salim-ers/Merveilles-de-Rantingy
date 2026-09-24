@@ -1,50 +1,48 @@
 'use client';
 
-import { contactSchema } from '@/lib/validation';
+import { Field, FormFoot, Honeypot } from './Field';
 import { useFormState } from './useFormState';
-import { Arrow } from '@/components/ui/Arrow';
 
+/** Message libre à la boutique. Pour une commande de gâteau, la fiche dédiée est sur /commandes. */
 export function ContactForm() {
-  const { status, message, errors, submit } = useFormState(contactSchema, '/api/contact');
+  const { status, message, errors, submit } = useFormState();
 
   return (
-    <form className="form" onSubmit={submit} noValidate>
-      <div className="f" data-invalid={Boolean(errors.prenom)}>
-        <label htmlFor="c-prenom">Prénom <i>*</i></label>
-        <input id="c-prenom" name="prenom" autoComplete="given-name" /><span className="e">{errors.prenom}</span>
-      </div>
-      <div className="f" data-invalid={Boolean(errors.nom)}>
-        <label htmlFor="c-nom">Nom <i>*</i></label>
-        <input id="c-nom" name="nom" autoComplete="family-name" /><span className="e">{errors.nom}</span>
-      </div>
-      <div className="f" data-invalid={Boolean(errors.telephone)}>
-        <label htmlFor="c-tel">Téléphone</label>
-        <input id="c-tel" name="telephone" type="tel" autoComplete="tel" /><span className="e">{errors.telephone}</span>
-      </div>
-      <div className="f" data-invalid={Boolean(errors.email)}>
-        <label htmlFor="c-email">E-mail <i>*</i></label>
-        <input id="c-email" name="email" type="email" autoComplete="email" /><span className="e">{errors.email}</span>
-      </div>
-      <div className="f full" data-invalid={Boolean(errors.sujet)}>
-        <label htmlFor="c-sujet">Sujet <i>*</i></label>
-        <input id="c-sujet" name="sujet" /><span className="e">{errors.sujet}</span>
-      </div>
-      <div className="f full" data-invalid={Boolean(errors.message)}>
-        <label htmlFor="c-message">Message <i>*</i></label>
-        <textarea id="c-message" name="message" /><span className="e">{errors.message}</span>
+    <form className="fiche fiche--short" method="post" action="/api/contact" onSubmit={submit}>
+      <input type="hidden" name="formulaire" value="contact" />
+      <Honeypot />
+
+      <div className="fiche-head">
+        <p className="fiche-k">Message</p>
+        <p className="fiche-t">À la boutique</p>
+        <p className="fiche-req"><span aria-hidden="true">*</span> champ obligatoire</p>
       </div>
 
-      <p className="note">Pour une réponse tout de suite, le téléphone reste le plus efficace : 09 80 67 05 88.</p>
-      {status !== 'idle' && (
-        <p className={`msg ${status === 'success' ? 'ok' : status === 'error' ? 'ko' : ''}`} role="status" aria-live="polite">
-          {message}
-        </p>
-      )}
-      <div className="f full">
-        <button className="p p--main" type="submit" disabled={status === 'loading'}>
-          {status === 'loading' ? 'Envoi…' : 'Envoyer'}<Arrow />
-        </button>
-      </div>
+      <fieldset className="fiche-part">
+        <legend className="sr">Vos coordonnées et votre message</legend>
+        <Field id="c-prenom" label="Prénom" required error={errors.prenom}>
+          <input name="prenom" autoComplete="given-name" maxLength={60} />
+        </Field>
+        <Field id="c-nom" label="Nom" required error={errors.nom}>
+          <input name="nom" autoComplete="family-name" maxLength={80} />
+        </Field>
+        <Field id="c-email" label="E-mail" required error={errors.email}>
+          <input name="email" type="email" autoComplete="email" maxLength={254} />
+        </Field>
+        <Field id="c-tel" label="Téléphone" error={errors.telephone}>
+          <input name="telephone" type="tel" autoComplete="tel" inputMode="tel" maxLength={25} />
+        </Field>
+        <Field id="c-message" label="Message" required error={errors.message} full>
+          <textarea name="message" rows={5} minLength={10} maxLength={2000} />
+        </Field>
+      </fieldset>
+
+      <FormFoot
+        status={status}
+        message={message}
+        submitLabel="Envoyer le message"
+        privacy="Vos coordonnées servent uniquement à vous répondre."
+      />
     </form>
   );
 }

@@ -1,83 +1,125 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { gallery, galleryFilters, type Filtre } from '@/data/gallery';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { media } from '@/data/media';
+import { vitrine } from '@/data/gallery';
 
-/** Galerie en arches + visionneuse accessible (clavier, swipe, Échap). */
+/**
+ * « La vitrine du jour » : mosaïque éditoriale, sans cartes.
+ * Sans JavaScript, chaque vignette est un simple lien vers la photo.
+ * Avec JavaScript, elle ouvre une visionneuse (<dialog> natif : piège du focus,
+ * fermeture par Échap, retour du focus sur la vignette), navigable au clavier et au doigt.
+ */
 export function PhotoGrid() {
-  const [filter, setFilter] = useState<Filtre>('tout');
+  const dialog = useRef<HTMLDialogElement>(null);
+  const trigger = useRef<HTMLElement | null>(null);
+  const touchX = useRef<number | null>(null);
   const [index, setIndex] = useState<number | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const touch = useRef(0);
 
-  const items = useMemo(() => gallery.filter((g) => filter === 'tout' || g.filter === filter), [filter]);
-  const move = useCallback((delta: number) => {
-    setIndex((i) => (i === null ? i : (i + delta + items.length) % items.length));
-  }, [items.length]);
+  const open = (i: number, event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    trigger.current = event.currentTarget;
+    setIndex(i);
+    dialog.current?.showModal();
+  };
+
+  const step = useCallback((delta: number) => {
+    setIndex((i) => (i === null ? i : (i + delta + vitrine.length) % vitrine.length));
+  }, []);
 
   useEffect(() => {
-    if (index === null) return;
-    document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIndex(null);
-      if (e.key === 'ArrowRight') move(1);
-      if (e.key === 'ArrowLeft') move(-1);
+    const el = dialog.current;
+    if (!el) return;
+    const onClose = () => {
+      setIndex(null);
+      trigger.current?.focus();
     };
-    window.addEventListener('keydown', onKey);
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
-  }, [index, move]);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') step(1);
+      if (e.key === 'ArrowLeft') step(-1);
+    };
+    el.addEventListener('close', onClose);
+    el.addEventListener('keydown', onKey);
+    return () => {
+      el.removeEventListener('close', onClose);
+      el.removeEventListener('keydown', onKey);
+    };
+  }, [step]);
 
-  const current = index !== null ? items[index] : undefined;
-  const img = current ? media[current.key] : undefined;
+  const current = index === null ? null : vitrine[index];
+  const currentMedia = current ? media[current.key] : null;
 
   return (
     <>
-      <div className="filters" role="group" aria-label="Filtrer la galerie">
-        {galleryFilters.map((f) => (
-          <button key={f.id} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.label}</button>
-        ))}
-      </div>
-
-      <div className="arches">
-        {items.map((item, i) => {
-          const photo = media[item.key];
+      <ul className="mosaic" data-reveal="stagger">
+        {vitrine.map((tile, i) => {
+          const m = media[tile.key];
           return (
-            <button key={item.key} onClick={() => setIndex(i)} aria-label={`Agrandir : ${photo.alt}`}>
-              <figure className="arch" style={{ margin: 0 }}>
-                <Image src={photo.src} alt={photo.alt} fill sizes="(max-width:760px) 100vw, 32vw" style={{ objectFit: 'cover' }} />
-              </figure>
-            </button>
+            <li
+              key={tile.key}
+              className={`tile tile--${tile.mobile}`}
+              style={{ '--i': i % 6, '--col': tile.col, '--row': tile.row } as React.CSSProperties}
+            >
+              <a href={m.src} onClick={(e) => open(i, e)} aria-label={`${tile.name} — agrandir la photo`}>
+                <Image
+                  src={m.src}
+                  alt={m.alt}
+                  fill
+                  sizes={tile.mobile === 'wide' ? '(max-width: 700px) 100vw, 50vw' : '(max-width: 700px) 50vw, 34vw'}
+                  style={{ objectFit: 'cover', objectPosition: m.pos ?? '50% 50%' }}
+                />
+                <span className="tile-cap" aria-hidden="true">
+                  <b>{tile.name}</b>
+                  <span>{tile.category}</span>
+                </span>
+              </a>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
-      <div
-        className={`viewer${current ? ' open' : ''}`}
-        aria-hidden={!current}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Galerie photo"
-        onClick={(e) => { if (e.target === e.currentTarget) setIndex(null); }}
-        onTouchStart={(e) => { touch.current = e.touches[0]!.clientX; }}
+      <dialog
+        ref={dialog}
+        className="lb"
+        aria-label={current ? `Photo : ${current.name}` : 'Visionneuse'}
+        onClick={(e) => {
+          if (e.target === dialog.current) dialog.current.close();
+        }}
+        onTouchStart={(e) => {
+          touchX.current = e.touches[0]?.clientX ?? null;
+        }}
         onTouchEnd={(e) => {
-          const dx = e.changedTouches[0]!.clientX - touch.current;
-          if (Math.abs(dx) > 50) move(dx < 0 ? 1 : -1);
+          const start = touchX.current;
+          const end = e.changedTouches[0]?.clientX;
+          if (start !== null && end !== undefined && Math.abs(end - start) > 50) step(end < start ? 1 : -1);
+          touchX.current = null;
         }}
       >
-        <button ref={closeRef} className="x" aria-label="Fermer" onClick={() => setIndex(null)}><X size={18} /></button>
-        <button className="pv" aria-label="Image précédente" onClick={() => move(-1)}><ChevronLeft size={18} /></button>
-        <button className="nx" aria-label="Image suivante" onClick={() => move(1)}><ChevronRight size={18} /></button>
-        {img && (
-          <div>
-            <Image src={img.src} alt={img.alt} width={1400} height={Math.round(1400 / img.ratio)} sizes="92vw" quality={88} />
-            <p className="cap">{img.alt}</p>
+        {current && currentMedia && (
+          <div className="lb-in">
+            <div className="lb-img">
+              <Image
+                key={current.key}
+                src={currentMedia.src}
+                alt={currentMedia.alt}
+                width={currentMedia.width}
+                height={currentMedia.height}
+                sizes="(max-width: 900px) 100vw, 80vh"
+                quality={80}
+              />
+            </div>
+            <p className="lb-cap">
+              <b>{current.name}</b> · {current.category}
+              <span>{(index ?? 0) + 1} / {vitrine.length}</span>
+            </p>
           </div>
         )}
-      </div>
+        <button type="button" className="lb-btn lb-x" onClick={() => dialog.current?.close()} aria-label="Fermer la visionneuse">✕</button>
+        <button type="button" className="lb-btn lb-prev" onClick={() => step(-1)} aria-label="Photo précédente">←</button>
+        <button type="button" className="lb-btn lb-next" onClick={() => step(1)} aria-label="Photo suivante">→</button>
+      </dialog>
     </>
   );
 }

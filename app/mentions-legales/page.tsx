@@ -10,36 +10,32 @@ export const metadata: Metadata = {
 
 export default function MentionsPage() {
   return (
-    <section className="sec ivory" style={{ paddingTop: 'calc(var(--bar) + var(--pad))' }}>
-      <div className="shell" style={{ maxWidth: 860 }}>
-        <h1 className="ti s2">Mentions légales</h1>
+    <article className="mentions cadre">
+      <h1 className="d d-l">Mentions légales</h1>
 
-        <ul className="facts" style={{ marginTop: 34 }}>
-          <li><span className="k">Éditeur</span><span className="v">{site.legal.name}<small>{site.legal.form} au capital de {site.legal.capital} — {fullAddress}</small></span></li>
-          <li><span className="k">Immatriculation</span><span className="v">SIREN {site.legal.siren}<small>SIRET {site.legal.siret} · {site.legal.rcs} · TVA {site.legal.vat}</small></span></li>
-          <li><span className="k">Activité</span><span className="v">{site.legal.activity}<small>Entreprise immatriculée depuis {site.legal.since}</small></span></li>
-          <li><span className="k">Téléphone</span><span className="v">{site.phone.display}</span></li>
-          <li><span className="k">Publication</span><span className="v">{site.legal.director ?? '[À compléter]'}<small>Le gérant figure au registre du commerce : à confirmer avant publication.</small></span></li>
-          <li><span className="k">Hébergement</span><span className="v">{site.legal.host.name}<small>{site.legal.host.address}</small></span></li>
-        </ul>
-
-        <div className="steps" style={{ marginTop: 34 }}>
-          <div className="step">
-            <span className="n">1</span>
-            <div>
-              <h3>Propriété intellectuelle</h3>
-              <p>Les photographies présentées sur ce site ont été fournies par {site.legal.name} et sont protégées. Toute reproduction sans autorisation est interdite.</p>
-            </div>
-          </div>
-          <div className="step">
-            <span className="n">2</span>
-            <div>
-              <h3>Crédits</h3>
-              <p>Conception et développement : [agence à compléter]. Photographies : {site.legal.name}.</p>
-            </div>
-          </div>
+      <dl className="mentions-list">
+        <div><dt>Éditeur</dt><dd>{site.legal.name}, {site.legal.form} au capital de {site.legal.capital}<br />{fullAddress}</dd></div>
+        <div><dt>Immatriculation</dt><dd>SIREN {site.legal.siren} · SIRET {site.legal.siret}<br />{site.legal.rcs} · TVA {site.legal.vat}</dd></div>
+        <div><dt>Activité</dt><dd>{site.legal.activity}</dd></div>
+        <div><dt>Téléphone</dt><dd><a href={site.phone.href}>{site.phone.display}</a></dd></div>
+        <div>
+          <dt>Directeur de la publication</dt>
+          <dd>{site.legal.director ?? `Le gérant de la société ${site.legal.name}`}</dd>
         </div>
-      </div>
-    </section>
+        <div><dt>Hébergement</dt><dd>{site.legal.host.name}<br />{site.legal.host.address}</dd></div>
+      </dl>
+
+      <h2 className="d d-m">Propriété intellectuelle</h2>
+      <p>
+        Les photographies présentées sur ce site appartiennent à {site.legal.name}. Toute reproduction sans
+        autorisation préalable est interdite.
+      </p>
+
+      <h2 className="d d-m">Informations produits</h2>
+      <p>
+        Les produits présentés illustrent ce que propose habituellement la boutique. Leur disponibilité varie selon
+        les jours ; aucun prix n’est affiché en ligne et aucune vente n’est conclue sur ce site.
+      </p>
+    </article>
   );
 }

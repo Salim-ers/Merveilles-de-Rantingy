@@ -1,18 +1,24 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { PageHead } from '@/components/sections/PageHead';
 import { HoursCard } from '@/components/sections/HoursCard';
 import { InfoBlock } from '@/components/sections/InfoBlock';
 import { ContactForm } from '@/components/forms/ContactForm';
-import { FinaleCTA } from '@/components/sections/FinaleCTA';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { media } from '@/data/media';
-import { site, fullAddress } from '@/data/site';
-import { breadcrumbSchema } from '@/lib/schema';
+import { site } from '@/data/site';
+import { hoursSummary } from '@/lib/business-status';
+import { breadcrumbSchema, jsonLd } from '@/lib/schema';
 
 export const metadata: Metadata = {
-  title: 'Contact & horaires',
-  description: 'Aux Merveilles de Rantigny, avenue de Rantigny, 60290 Rantigny. Téléphone 09 80 67 05 88. Ouvert de 6h30 à 20h, fermé le jeudi.',
+  title: 'Horaires, adresse et téléphone',
+  description: `Aux Merveilles de Rantigny, ${site.address.street}, ${site.address.postalCode} ${site.address.city}. ${hoursSummary()}. Téléphone ${site.phone.display}.`,
   alternates: { canonical: '/contact' },
+  openGraph: {
+    title: 'Horaires & accès · Aux Merveilles de Rantigny',
+    description: `${site.address.street}, ${site.address.city} — ${hoursSummary()}.`,
+    url: '/contact',
+    images: [{ url: media.facade.src, width: 1254, height: 1254, alt: media.facade.alt }],
+  },
 };
 
 export default function ContactPage() {
@@ -21,37 +27,33 @@ export default function ContactPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema([{ name: 'Accueil', path: '/' }, { name: 'Contact', path: '/contact' }])),
+          __html: jsonLd(breadcrumbSchema([{ name: 'Accueil', path: '/' }, { name: 'Horaires & accès', path: '/contact' }])),
         }}
       />
 
       <PageHead
-        crumb="Contact"
-        title={<>Une question ?<br /><em>Passez ou appelez.</em></>}
-        lead={`${fullAddress} — ${site.phone.display}`}
-        image={media.facade}
+        kicker="Horaires & accès"
+        title={<>Nous <span className="it">trouver</span></>}
+        lead={<>{site.address.street}, {site.address.postalCode} {site.address.city}. Appelez le <a href={site.phone.href}>{site.phone.display}</a>.</>}
+        image="facade"
+        pos="45% 55%"
       />
-
       <HoursCard />
       <InfoBlock />
 
-      <section className="sec cream">
-        <div className="shell split">
+      <section className="write" aria-labelledby="write-title">
+        <div className="cadre write-grid">
           <div>
-            <Eyebrow>Écrire</Eyebrow>
-            <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '15ch' }}>
-              Pour tout le reste,<br /><em>ce formulaire.</em>
-            </h2>
-            <p className="lead rise" data-d=".1s" style={{ marginTop: 18 }}>
-              Question sur un produit, une disponibilité, une commande : écrivez, la boutique répond.
-              Pour une réponse immédiate, le téléphone reste plus rapide.
+            <h2 id="write-title" className="d d-l">Écrire <span className="it">à la boutique</span></h2>
+            <p className="write-lead">
+              Une question sur un produit ou une disponibilité ? Écrivez ici. Pour une réponse immédiate,
+              le téléphone reste le plus rapide. Pour un gâteau d’occasion, utilisez plutôt{' '}
+              <Link href="/commandes">la fiche de demande</Link>.
             </p>
           </div>
           <ContactForm />
         </div>
       </section>
-
-      <FinaleCTA />
     </>
   );
 }

@@ -4,59 +4,47 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
- * Mouvement doux : des choses qui montent et qui s'ouvrent, jamais qui claquent.
- * - Révélations : IntersectionObserver, 0,7–1 s, courbe souple.
- * - GSAP, chargé dynamiquement, ne sert qu'à faire respirer le hero
- *   (léger dézoom de l'arche et flottement des deux médaillons).
+ * Révélations au défilement, sans bibliothèque.
+ * Le contenu est visible par défaut : ce n'est qu'une fois ce script actif
+ * (html[data-motion="on"]) que les éléments hors écran sont masqués puis dévoilés.
+ * Rien ne se passe si l'utilisateur préfère réduire les animations.
+ *
+ * data-reveal="mask"  : la photo se découvre sous un volet
+ * data-reveal="rise"  : le texte monte légèrement
+ * data-reveal="stagger" : les enfants arrivent l'un après l'autre (--i)
  */
 export function Motion() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!('IntersectionObserver' in window)) return;
+
+    const root = document.documentElement;
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)'));
+    const vh = window.innerHeight;
+
+    // Ce qui est déjà à l'écran reste affiché tel quel (pas de clignotement).
+    for (const el of nodes) {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 0.92 && r.bottom > 0) el.classList.add('is-in');
+    }
 
     const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-      }),
-      { threshold: 0.15, rootMargin: '0px 0px -7% 0px' },
-    );
-    document.querySelectorAll<HTMLElement>('.rise,.grow,.curtain').forEach((el) => {
-      if (el.dataset.d) el.style.setProperty('--d', el.dataset.d);
-      io.observe(el);
-    });
-
-    if (reduce) return () => io.disconnect();
-
-    let dispose: (() => void) | undefined;
-
-    (async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
-      gsap.registerPlugin(ScrollTrigger);
-
-      const ctx = gsap.context(() => {
-        if (document.querySelector('.hero-arch img')) {
-          gsap.to('.hero-arch img', { scale: 1, duration: 1.8, ease: 'power2.out', delay: 0.2 });
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
         }
-        gsap.utils.toArray<HTMLElement>('.hero-float .round').forEach((el, i) => {
-          gsap.to(el, {
-            y: i === 0 ? -34 : 34, ease: 'none',
-            scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1.1 },
-          });
-        });
-        gsap.utils.toArray<HTMLElement>('[data-float]').forEach((el) => {
-          gsap.fromTo(el, { y: 16 }, {
-            y: -16, ease: 'none',
-            scrollTrigger: { trigger: el.parentElement!, start: 'top bottom', end: 'bottom top', scrub: 1.2 },
-          });
-        });
-      });
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+    );
+    nodes.filter((el) => !el.classList.contains('is-in')).forEach((el) => io.observe(el));
+    root.dataset.motion = 'on';
 
-      ScrollTrigger.refresh();
-      dispose = () => ctx.revert();
-    })();
-
-    return () => { io.disconnect(); dispose?.(); };
+    return () => io.disconnect();
   }, [pathname]);
 
   return null;

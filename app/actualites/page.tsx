@@ -1,61 +1,42 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { PageHead } from '@/components/sections/PageHead';
-import { FinaleCTA } from '@/components/sections/FinaleCTA';
-import { media } from '@/data/media';
-import { posts, publishedPosts } from '@/data/news';
+import { Photo } from '@/components/ui/Photo';
+import { posts, hasNews } from '@/data/news';
 
 export const metadata: Metadata = {
-  title: 'Actualités',
-  description: 'Nouveautés de la vitrine, commandes de fête et horaires exceptionnels d’Aux Merveilles de Rantigny.',
+  title: 'Saison & actualités',
+  description: 'Les nouveautés, les périodes de fête et les horaires exceptionnels d’Aux Merveilles de Rantigny.',
   alternates: { canonical: '/actualites' },
 };
 
+const frDate = (iso: string) =>
+  new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })
+    .format(new Date(`${iso}T12:00:00Z`));
+
+/** N'existe que si data/news.ts contient au moins une publication réelle. */
 export default function ActualitesPage() {
-  const items = publishedPosts.length > 0 ? publishedPosts : posts;
-  const placeholder = publishedPosts.length === 0;
+  if (!hasNews) notFound();
+
+  const sorted = [...posts].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <>
-      <PageHead
-        crumb="Actualités"
-        title={<>Ce qui change<br /><em>en boutique.</em></>}
-        lead="Nouveautés de la vitrine, périodes de fête, fermetures exceptionnelles."
-      />
-
-      <section className="sec ivory">
-        <div className="shell">
-          {placeholder && (
-            <p className="note" style={{ marginBottom: 30 }}>
-              Rubrique prête à publier. Les trois modèles ci-dessous montrent la mise en page : ils
-              restent invisibles en production tant qu’aucun contenu réel n’est ajouté dans <code>data/news.ts</code>.
-            </p>
-          )}
-
-          <div className="posts">
-            {items.map((post, i) => {
-              const img = media[post.image];
-              return (
-                <article className="card rise" data-d={`${i * 0.06}s`} key={post.slug}>
-                  <div className="ph">
-                    <Image src={img.src} alt={img.alt} width={900} height={675} sizes="(max-width:1080px) 100vw, 32vw" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <div className="bd">
-                    <p style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--apricot-deep)' }}>
-                      {post.category}{post.date ? ` · ${post.date}` : ''}
-                    </p>
-                    <h3>{post.title}</h3>
-                    <p>{post.excerpt}</p>
-                    {post.draft && <span className="draft">Modèle — non publié</span>}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+      <PageHead kicker="Saison & actualités" title={<>Ce qui change <span className="it">en boutique</span></>} />
+      <section className="news">
+        <div className="cadre news-list">
+          {sorted.map((post) => (
+            <article className={`news-item${post.image ? '' : ' news-item--type'}`} key={post.slug} id={post.slug}>
+              {post.image && <Photo k={post.image} sizes="(max-width: 900px) 100vw, 40vw" />}
+              <div>
+                <p className="kicker">{post.category} · <time dateTime={post.date}>{frDate(post.date)}</time></p>
+                <h2 className="d d-m">{post.title}</h2>
+                <p>{post.excerpt}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
-
-      <FinaleCTA />
     </>
   );
 }

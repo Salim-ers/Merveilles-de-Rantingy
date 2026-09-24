@@ -1,50 +1,52 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { rayons, autresActivites } from '@/data/products';
-import { media } from '@/data/media';
-import { Eyebrow } from '@/components/ui/Eyebrow';
+import { categories } from '@/data/products';
+import { Photo } from '@/components/ui/Photo';
 
 /**
- * Les rayons en rail horizontal : défilement natif (scroll-snap), swipe sur mobile,
- * aucun JavaScript de carrousel.
+ * La signalétique des rayons, comme les titres d'une carte.
+ * Desktop : survol ou focus d'un rayon → sa photo s'affiche à droite (CSS :has, sans JS).
+ * Mobile : chaque ligne porte sa vignette, rien ne dépend du survol.
  */
 export function RayonsRail() {
   return (
-    <section className="sec ivory">
-      <div className="shell">
-        <div className="head">
-          <div>
-            <Eyebrow>Ce qu’on met en vitrine</Eyebrow>
-            <h2 className="ti s2 rise" data-d=".05s">Six rayons,<br /><em>une seule adresse.</em></h2>
-          </div>
-          <p className="lead rise" data-d=".1s" style={{ maxWidth: '32ch' }}>
-            La vitrine change au fil des jours et des saisons. Voilà ce qu’on y retrouve toute l’année.
-          </p>
+    <section className="board" aria-labelledby="board-title">
+      <div className="cadre board-in">
+        <div className="board-head">
+          <p className="kicker">Rayon par rayon</p>
+          <h2 id="board-title" className="d d-l" data-reveal="rise">Qu’est-ce qui <em className="it">vous fait envie ?</em></h2>
         </div>
 
-        <div className="rail-wrap">
-          <div className="rail">
-            {rayons.map((rayon) => {
-              const img = media[rayon.image];
-              return (
-                <Link href={rayon.href} key={rayon.name}>
-                  <figure className="arch" style={{ margin: 0 }}>
-                    <Image src={img.src} alt={img.alt} fill sizes="286px" style={{ objectFit: 'cover' }} />
-                  </figure>
-                  <h3>{rayon.name}</h3>
-                  <p>{rayon.text}</p>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+        <ol className="board-list" data-reveal="stagger">
+          {categories.map((c, i) => (
+            <li key={c.id} style={{ '--i': i } as React.CSSProperties}>
+              <Link href={`/nos-produits#${c.id}`}>
+                <span className="board-n">{String(i + 1).padStart(2, '0')}</span>
+                <span className="board-name">{c.label}</span>
+                <span className="board-line">{c.line}</span>
+                <span className="board-thumb" aria-hidden="true">
+                  {c.image ? (
+                    <Photo k={c.image} pos={c.pos} sizes="96px" decorative />
+                  ) : (
+                    <span className="board-empty">{c.label.slice(0, 1)}</span>
+                  )}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
 
-        <p className="rail-hint">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-          Faites glisser — et aussi, selon la saison : {autresActivites}.
-        </p>
+        <div className="board-stage" aria-hidden="true">
+          {categories.map((c) =>
+            c.image ? (
+              <Photo key={c.id} k={c.image} pos={c.pos} className="board-pic" sizes="36vw" decorative />
+            ) : (
+              <div key={c.id} className="board-pic board-pic--type">
+                <span>{c.label}</span>
+                <em className="it">{c.line}</em>
+              </div>
+            ),
+          )}
+        </div>
       </div>
     </section>
   );

@@ -1,24 +1,33 @@
-import Image from 'next/image';
-import { media } from '@/data/media';
-import { site, fullAddress } from '@/data/site';
+import Link from 'next/link';
+import { Photo } from '@/components/ui/Photo';
 import { Arrow } from '@/components/ui/Arrow';
+import { Steps } from './Steps';
 
-export function FinaleCTA() {
+/**
+ * Gâteaux d'occasion : la section commerciale.
+ * Aucune promesse de produit non confirmé : chaque demande est étudiée par la boutique.
+ */
+export function FinaleCTA({ headingLevel = 2 }: { headingLevel?: 2 | 3 }) {
+  const H = headingLevel === 2 ? 'h2' : 'h3';
   return (
-    <section className="sec finale">
-      <div className="shell">
-        <figure className="round grow" style={{ margin: '0 auto clamp(20px,3vw,32px)' }}>
-          <Image src={media.flans.src} alt={media.flans.alt} fill sizes="150px" style={{ objectFit: 'cover' }} />
-        </figure>
-        <h2 className="ti s1 rise">On vous garde<br /><em>un flan ?</em></h2>
-        <p className="lead rise" data-d=".06s">
-          {fullAddress}. Ouvert de 6h30 à 20h, tous les jours sauf le jeudi.
-        </p>
-        <div className="acts rise" data-d=".1s">
-          <a className="p p--main" href={site.maps.directions} target="_blank" rel="noopener">Venir à la boutique<Arrow /></a>
-          <a className="p p--line" href={site.phone.href}>{site.phone.display}</a>
-        </div>
+    <section className="fete" aria-labelledby="fete-title">
+      <div className="fete-media" data-reveal="mask">
+        <Photo k="coeurs" sizes="(max-width: 900px) 100vw, 58vw" pos="45% 35%" />
       </div>
+
+      <div className="fete-body">
+        <p className="kicker kicker--ink">Anniversaires · fêtes · gâteaux personnalisés</p>
+        <H id="fete-title" className="d d-xl" data-reveal="rise">
+          Une occasion <span className="it">à fêter&nbsp;?</span>
+        </H>
+        <p className="fete-lead">
+          Décrivez-nous l’occasion, la date et le nombre de personnes. La boutique étudie votre demande
+          et vous dit ce qu’il est possible de préparer, dans quel format et à quel tarif.
+        </p>
+        <Link className="cta cta--ink" href="/commandes">Parler de mon gâteau<Arrow /></Link>
+      </div>
+
+      <Steps />
     </section>
   );
 }

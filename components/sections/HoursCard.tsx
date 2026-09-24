@@ -1,56 +1,75 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { openingHours, weekOrder } from '@/data/opening-hours';
-import { parisTime } from '@/lib/business-status';
+import { hoursByDay, weekOrder } from '@/data/opening-hours';
+import { formatDay, getBusinessStatus, hoursSummary, type BusinessStatus } from '@/lib/business-status';
 import { site } from '@/data/site';
-import { OpenState } from '@/components/ui/OpenState';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 
-/** Carte des horaires : le jeudi a sa propre couleur, pas un jour barré. */
+/**
+ * Les horaires, comme dans la boutique : l'écriteau accroché à la porte
+ * (« Ouvert » / « Fermé ») et la liste des jours à côté.
+ * Tout est rendu en HTML côté serveur ; le navigateur ajoute seulement l'état
+ * de l'écriteau et le repère du jour, calculés sur l'heure de Paris.
+ * Les jours fériés ne sont pas annoncés : l'information n'est pas disponible.
+ */
 export function HoursCard() {
-  const [today, setToday] = useState<number | null>(null);
-  useEffect(() => setToday(parisTime().day), []);
+  const [status, setStatus] = useState<BusinessStatus | null>(null);
+
+  useEffect(() => {
+    const tick = () => setStatus(getBusinessStatus());
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
-    <section className="sec paper" id="horaires">
-      <div className="shell split">
-        <div>
-          <Eyebrow>Horaires</Eyebrow>
-          <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '14ch' }}>
-            Six jours sur sept,<br /><em>de 6h30 à 20h.</em>
-          </h2>
-          <p className="lead rise" data-d=".1s" style={{ marginTop: 20 }}>
-            Le pain du matin et celui du soir sont au même endroit. Le jeudi, la boutique se repose :
-            c’est le seul jour où il faut aller ailleurs.
-          </p>
-          <p className="rise" data-d=".15s" style={{ marginTop: 24 }}><OpenState /></p>
-          <div className="acts rise" data-d=".2s">
-            <a className="p p--main" href={site.phone.href}>Appeler la boutique</a>
-            <a className="p p--line" href={site.maps.directions} target="_blank" rel="noopener">Itinéraire</a>
+    <section className="ardoise" id="horaires" aria-labelledby="hours-title">
+      <div className="cadre ardoise-grid">
+        <div className="ardoise-side">
+          <p className="kicker">Horaires</p>
+          <h2 id="hours-title" className="d d-l">Quand <span className="it">passer ?</span></h2>
+
+          <div className="ecriteau" data-state={status ? (status.open ? 'open' : 'closed') : 'unknown'} aria-live="polite">
+            <span className="ecriteau-nail" aria-hidden="true" />
+            {status ? (
+              <>
+                <p className="ecriteau-word">{status.open ? 'Ouvert' : 'Fermé'}</p>
+                <p className="ecriteau-sub">{status.open ? `maintenant · ${status.detail}` : status.detail}</p>
+              </>
+            ) : (
+              <>
+                <p className="ecriteau-word">Horaires</p>
+                <p className="ecriteau-sub">{hoursSummary()}</p>
+              </>
+            )}
           </div>
+
+          <p className="ardoise-note">
+            Horaires habituels. En cas de doute (jour férié, congés), appelez le{' '}
+            <a href={site.phone.href}>{site.phone.display}</a>.
+          </p>
         </div>
 
-        <div className="week grow">
-          <ul>
-            {weekOrder.map((day) => {
-              const entry = openingHours.find((d) => d.day === day)!;
-              const closed = entry.intervals.length === 0;
+        <table className="ardoise-table">
+          <caption className="sr">Horaires d’ouverture de la boutique</caption>
+          <tbody>
+            {weekOrder.map((n) => {
+              const d = hoursByDay(n);
+              if (!d) return null;
+              const closed = d.intervals.length === 0;
+              const isToday = status?.day === n;
               return (
-                <li
-                  key={day}
-                  data-day={day}
-                  className={`${closed ? 'off' : ''}${!closed && today === day ? ' today' : ''}`}
-                  suppressHydrationWarning
-                >
-                  <span>{entry.label}</span>
-                  <b>{closed ? 'Fermé' : entry.intervals.map((i) => `${i.open} – ${i.close}`).join(' · ')}</b>
-                </li>
+                <tr key={n} className={`${closed ? 'is-off' : ''}${isToday ? ' is-today' : ''}`}>
+                  <th scope="row">
+                    {d.label}
+                    {isToday && <span className="ardoise-today">aujourd’hui</span>}
+                  </th>
+                  <td>{closed ? 'Fermé' : formatDay(d)}</td>
+                </tr>
               );
             })}
-          </ul>
-          <p className="week-note">Ouvert le dimanche comme le reste de la semaine, jusqu’à 20h.</p>
-        </div>
+          </tbody>
+        </table>
       </div>
     </section>
   );

@@ -1,22 +1,33 @@
-import Image from 'next/image';
-import type { Media } from '@/data/media';
+import { Photo } from '@/components/ui/Photo';
+import type { MediaKey } from '@/data/media';
 
-/** En-tête de page : centré, sur ivoire, avec une bande photo arrondie facultative. */
-export function PageHead({
-  crumb, title, lead, image,
-}: { crumb: string; title: React.ReactNode; lead?: string; image?: Media }) {
+type Props = {
+  kicker: string;
+  title: React.ReactNode;
+  lead?: React.ReactNode;
+  image?: MediaKey;
+  pos?: string;
+};
+
+/**
+ * En-tête des pages intérieures : titre sur bandeau, photo rapprochée qui déborde à droite.
+ * La photo est l'élément LCP : chargée en priorité.
+ */
+export function PageHead({ kicker, title, lead, image, pos }: Props) {
   return (
-    <section className="phead">
-      <div className="shell">
-        <p className="crumb">{crumb}</p>
-        <h1 className="ti s1 rise">{title}</h1>
-        {lead && <p className="lead rise" data-d=".06s">{lead}</p>}
+    <header className={`phead${image ? '' : ' phead--plain'}`}>
+      <div className="cadre phead-grid">
+        <div className="phead-text">
+          <p className="kicker">{kicker}</p>
+          <h1 className="d d-xl phead-title">{title}</h1>
+          {lead && <p className="phead-lead">{lead}</p>}
+        </div>
         {image && (
-          <figure className="phead-media curtain" data-d=".1s" style={{ margin: 0, position: 'relative' }}>
-            <Image src={image.src} alt={image.alt} fill priority sizes="100vw" style={{ objectFit: 'cover' }} />
-          </figure>
+          <div className="phead-media">
+            <Photo k={image} pos={pos} sizes="(max-width: 900px) 100vw, 50vw" priority quality={80} />
+          </div>
         )}
       </div>
-    </section>
+    </header>
   );
 }

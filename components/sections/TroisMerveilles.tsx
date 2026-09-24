@@ -1,46 +1,69 @@
-import Image from 'next/image';
-import { media, type MediaKey } from '@/data/media';
-import { Eyebrow } from '@/components/ui/Eyebrow';
+import Link from 'next/link';
+import { Photo } from '@/components/ui/Photo';
+import { Arrow } from '@/components/ui/Arrow';
+import type { MediaKey } from '@/data/media';
 
-const trio: { key: MediaKey; title: string; text: string; tag: string; d?: string }[] = [
-  { key: 'macarons', title: 'Les macarons géants', tag: 'En vitrine',
-    text: 'Coque rose, crème et fraises entières. On les tient à deux mains.' },
-  { key: 'entremetsFruits', title: 'Les entremets', tag: 'En vitrine', d: '.07s',
-    text: 'Glaçage miroir, fruits frais et macarons posés dessus.' },
-  { key: 'coeurs', title: 'Les pièces de fête', tag: 'Sur commande', d: '.14s',
-    text: 'Cœurs, red velvet, gâteaux d’anniversaire. À commander à l’avance.' },
+type Merveille = {
+  n: string;
+  name: string;
+  text: string;
+  image: MediaKey;
+  pos?: string;
+  layout: 'bleed' | 'vertical' | 'offset' | 'vertical-right';
+  href: string;
+};
+
+const merveilles: Merveille[] = [
+  {
+    n: '01', name: 'Macarons géants', image: 'macarons', layout: 'bleed', pos: '50% 58%',
+    text: 'Deux coques roses, de la crème, des fraises entières et un voile de sucre glace. Format XXL.',
+    href: '/nos-produits#patisseries',
+  },
+  {
+    n: '02', name: 'Entremets', image: 'entremetsIndiv', layout: 'vertical', pos: '62% 50%',
+    text: 'Glaçage miroir jaune éclatant, fraises, framboises et myrtilles posées à la main. En individuel ou à partager.',
+    href: '/nos-produits#patisseries',
+  },
+  {
+    n: '03', name: 'Flans pâtissiers', image: 'flans', layout: 'offset', pos: '50% 0%',
+    text: 'Hauts, dorés, la surface caramélisée en taches brunes. À la part ou en pièce entière.',
+    href: '/nos-produits#flans-tartes',
+  },
+  {
+    n: '04', name: 'Tartes', image: 'tartePommes', layout: 'vertical-right', pos: '50% 48%',
+    text: 'La grande tarte aux pommes, pâte dorée, à partager sur la table du dimanche.',
+    href: '/nos-produits#flans-tartes',
+  },
 ];
 
+/** « Les merveilles » : chaque pièce signature a sa propre mise en page, jamais une grille. */
 export function TroisMerveilles() {
   return (
-    <section className="sec cream">
-      <div className="shell">
-        <div className="head" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <Eyebrow>Nos merveilles</Eyebrow>
-          <h2 className="ti s2 rise" data-d=".05s" style={{ maxWidth: '16ch' }}>
-            On aime bien<br /><em>faire les choses en grand.</em>
-          </h2>
-          <p className="lead rise" data-d=".1s" style={{ textAlign: 'center', marginTop: 14 }}>
-            Ici, une pâtisserie doit se voir depuis le trottoir.
-          </p>
-        </div>
+    <section className="mv" aria-labelledby="mv-title">
+      <header className="mv-head cadre">
+        <p className="kicker">La vitrine · pièces signature</p>
+        <h2 id="mv-title" className="d d-xl" data-reveal="rise">
+          Les merveilles<em className="it"> de la vitrine</em>
+        </h2>
+      </header>
 
-        <div className="trio">
-          {trio.map((item) => {
-            const img = media[item.key];
-            return (
-              <article className="rise" data-d={item.d} key={item.key}>
-                <figure className="arch" style={{ margin: 0 }}>
-                  <Image src={img.src} alt={img.alt} fill sizes="(max-width:760px) 100vw, 32vw" style={{ objectFit: 'cover' }} />
-                </figure>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-                <span className="tag">{item.tag}</span>
-              </article>
-            );
-          })}
-        </div>
-      </div>
+      {merveilles.map((m) => (
+        <article className={`mv-item mv--${m.layout}`} key={m.n}>
+          <div className="mv-media px" data-reveal="mask">
+            <Photo
+              k={m.image}
+              pos={m.pos}
+              sizes={m.layout === 'bleed' ? '100vw' : '(max-width: 900px) 100vw, 66vw'}
+            />
+          </div>
+          <h3 className="mv-name" data-reveal="rise"><span>{m.name}</span></h3>
+          <div className="mv-text" data-reveal="rise">
+            <span className="mv-n">{m.n}</span>
+            <p>{m.text}</p>
+            <Link className="ln" href={m.href}>Dans la vitrine<Arrow /></Link>
+          </div>
+        </article>
+      ))}
     </section>
   );
 }

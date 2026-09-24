@@ -1,11 +1,12 @@
 import { site } from '@/data/site';
+import { media } from '@/data/media';
 import { openingHours } from '@/data/opening-hours';
 
 const EN: Record<number, string> = {
   0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday',
 };
 
-/** JSON-LD Bakery : uniquement des données vérifiées (pas de GPS, pas de note tant qu'elle est masquée). */
+/** JSON-LD Bakery : uniquement des données vérifiées (pas de GPS, pas de note, pas de numéro de voirie). */
 export function bakerySchema() {
   return {
     '@context': 'https://schema.org',
@@ -16,9 +17,8 @@ export function bakerySchema() {
     description: site.shortDescription,
     url: site.url,
     telephone: site.phone.international.replace(/\s/g, ''),
-    priceRange: '€',
+    image: [media.facade, media.entremetsFruits, media.interieur].map((m) => `${site.url}${m.src}`),
     servesCuisine: ['Boulangerie', 'Pâtisserie', 'Sandwicherie'],
-    image: `${site.url}/images/boutique/aux-merveilles-rantigny-facade.webp`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: site.address.street,
@@ -28,9 +28,6 @@ export function bakerySchema() {
       addressCountry: site.address.countryCode,
     },
     ...(site.geo ? { geo: { '@type': 'GeoCoordinates', latitude: site.geo.lat, longitude: site.geo.lng } } : {}),
-    ...(site.reviews.showRating
-      ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: site.reviews.rating, reviewCount: site.reviews.count, bestRating: 5 } }
-      : {}),
     openingHoursSpecification: openingHours
       .filter((d) => d.intervals.length > 0)
       .flatMap((d) => d.intervals.map((i) => ({
@@ -48,3 +45,6 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
     })),
   };
 }
+
+/** Sérialisation sûre pour une balise <script type="application/ld+json">. */
+export const jsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');

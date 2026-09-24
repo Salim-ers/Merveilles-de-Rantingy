@@ -1,7 +1,7 @@
 export function Arrow() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg className="arw" viewBox="0 0 28 14" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <path d="M0 7h26M20 1l6 6-6 6" strokeLinecap="square" />
     </svg>
   );
 }

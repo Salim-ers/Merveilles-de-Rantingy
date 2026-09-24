@@ -1,56 +1,63 @@
-'use client';
-
-import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { produits, rayonFilters, type Rayonnage } from '@/data/products';
-import { media } from '@/data/media';
+import { categories, productsBy } from '@/data/products';
+import { Photo } from '@/components/ui/Photo';
+import { Arrow } from '@/components/ui/Arrow';
+import { CatalogFilter } from './CatalogFilter';
 
-/** Catalogue en cartes arrondies : aucun prix, aucun panier. */
+/**
+ * Le catalogue complet, rendu côté serveur : visible sans JavaScript.
+ * Le ruban des rayons est une suite d'ancres ; CatalogFilter le transforme en filtre.
+ * Aucun prix, aucun panier : c'est une vitrine, pas une boutique en ligne.
+ */
 export function ProductGrid() {
-  const params = useSearchParams();
-  const [active, setActive] = useState<Rayonnage | 'tout'>('tout');
-
-  useEffect(() => {
-    const r = params.get('r') as Rayonnage | null;
-    if (r && rayonFilters.some((f) => f.id === r)) setActive(r);
-  }, [params]);
-
-  const items = produits.filter((p) => active === 'tout' || p.rayon === active);
-
   return (
-    <>
-      <div className="filters" role="group" aria-label="Filtrer les produits">
-        {rayonFilters.map((f) => (
-          <button key={f.id} aria-pressed={active === f.id} onClick={() => setActive(f.id)}>{f.label}</button>
-        ))}
-      </div>
+    <div className="cat" id="catalogue">
+      <nav className="ribbon" aria-label="Rayons de la vitrine">
+        <ul>
+          <li><a href="#catalogue" data-cat="tout" aria-current="true">Tout</a></li>
+          {categories.map((c) => (
+            <li key={c.id}><a href={`#${c.id}`} data-cat={c.id}>{c.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+      <p className="sr" aria-live="polite" id="catalogue-status" />
 
-      <div className="cards">
-        {items.map((produit, i) => {
-          const img = media[produit.image];
-          return (
-            <article className="card rise" data-d={`${(i % 3) * 0.06}s`} key={produit.id}>
-              <div className="ph">
-                <Image src={img.src} alt={img.alt} width={900} height={675} sizes="(max-width:1080px) 100vw, 32vw" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div className="bd">
-                <h3>{produit.name}</h3>
-                <p>{produit.text}</p>
-                <span className={`badge${produit.how === 'commande' ? ' badge--order' : ''}`}>
-                  {produit.how === 'commande' ? 'Sur commande' : 'En boutique'}
-                </span>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      {categories.map((c) => {
+        const items = productsBy(c.id);
+        if (!items.length) return null;
+        return (
+          <section className="cat-sec" id={c.id} data-cat={c.id} key={c.id} aria-labelledby={`h-${c.id}`}>
+            <header className="cat-head cadre">
+              <h2 id={`h-${c.id}`} className="d d-l">{c.label}</h2>
+              <p className="it">{c.line}</p>
+            </header>
+            <div className="cat-items cadre">
+              {items.map((p) =>
+                p.image ? (
+                  <article className="prod" key={p.id}>
+                    <Photo k={p.image} sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 34vw" />
+                    <div className="prod-body">
+                      <p className="prod-cat">{c.label}</p>
+                      <h3 className="prod-name">{p.name}</h3>
+                      {p.text && <p className="prod-text">{p.text}</p>}
+                      {p.onRequest && <Link className="ln" href="/commandes">Faire une demande<Arrow /></Link>}
+                    </div>
+                  </article>
+                ) : (
+                  <article className="prod prod--type" key={p.id}>
+                    <p className="prod-cat">{c.label}</p>
+                    <h3 className="prod-name">{p.name}</h3>
+                    {p.text && <p className="prod-text">{p.text}</p>}
+                    {p.onRequest && <Link className="ln" href="/commandes">Faire une demande<Arrow /></Link>}
+                  </article>
+                ),
+              )}
+            </div>
+          </section>
+        );
+      })}
 
-      <p className="note" style={{ marginTop: 28, borderRadius: 'var(--r-s)' }}>
-        Les disponibilités changent d’un jour à l’autre. Pour une pièce précise ou une commande,
-        <Link href="/commandes" className="link" style={{ marginLeft: 4 }}>passez par le formulaire</Link> ou appelez la boutique.
-      </p>
-    </>
+      <CatalogFilter />
+    </div>
   );
 }
