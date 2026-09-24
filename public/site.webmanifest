@@ -1,0 +1,9 @@
+{
+  "name": "Aux Merveilles de Rantigny — Boulangerie Pâtisserie",
+  "short_name": "Aux Merveilles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF5EC",
+  "theme_color": "#FBF5EC",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
